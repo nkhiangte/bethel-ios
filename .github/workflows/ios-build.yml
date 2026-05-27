@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15 # Upgrading to macos-15 defaults to Xcode 16, solving the Swift 6 issue natively!
 
     steps:
     - name: Checkout Repository
@@ -16,6 +16,7 @@ jobs:
     - name: Configure Podfile
       run: |
         cd src
+        # A clean Podfile. No experimental flags needed anymore!
         cat <<EOF > Podfile
         platform :ios, '15.0'
         use_frameworks!
@@ -23,14 +24,6 @@ jobs:
         target 'Bethel' do
           pod 'FirebaseCore'
           pod 'GoogleDataTransport'
-        end
-
-        post_install do |installer|
-          installer.pods_project.targets.each do |target|
-            target.build_configurations.each do |config|
-              config.build_settings['OTHER_SWIFT_FLAGS'] = '-enable-experimental-feature AccessLevelOnImport -enable-experimental-feature SendingArgsAndResults'
-            end
-          end
         end
         EOF
 
