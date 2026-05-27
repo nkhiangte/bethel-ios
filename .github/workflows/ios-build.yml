@@ -7,11 +7,25 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14 # Our cloud Mac
+    runs-on: macos-14
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
+
+    - name: Inject Swift Flags into Podfile
+      run: |
+        cd src
+        cat <<EOF >> Podfile
+
+        post_install do |installer|
+          installer.pods_project.targets.each do |target|
+            target.build_configurations.each do |config|
+              config.build_settings['OTHER_SWIFT_FLAGS'] = '-enable-experimental-feature AccessLevelOnImport -enable-experimental-feature SendingArgsAndResults'
+            end
+          end
+        end
+        EOF
 
     - name: Install CocoaPods Dependencies
       run: |
@@ -21,6 +35,10 @@ jobs:
     - name: Validate Xcode Build
       run: |
         cd src
-        # This compiles the app to ensure the code works!
-        # Note: CODE_SIGNING_ALLOWED=NO allows it to build without an Apple Developer account.
-        xcodebuild -workspace Bethel.xcworkspace -scheme "Bethel" -sdk iphoneos CODE_SIGNING_ALLOWED=NO build
+        xcodebuild build \
+          -workspace Bethel.xcworkspace \
+          -scheme "Bethel" \
+          -sdk iphoneos \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
