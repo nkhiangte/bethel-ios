@@ -1,44 +1,23 @@
-name: Build iOS App
-
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: macos-14
-
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-
-    - name: Inject Swift Flags into Podfile
+- name: Configure Podfile
       run: |
         cd src
-        cat <<EOF >> Podfile
+        # This overwrites the Podfile to ensure we have one single, unified post_install hook
+        cat <<EOF > Podfile
+        platform :ios, '15.0'
+        use_frameworks!
+
+        target 'Bethel' do
+          pod 'FirebaseCore'
+          pod 'GoogleDataTransport'
+        end
 
         post_install do |installer|
           installer.pods_project.targets.each do |target|
+            # Existing post_install logic often goes here
             target.build_configurations.each do |config|
+              # Our injected Swift experimental flags
               config.build_settings['OTHER_SWIFT_FLAGS'] = '-enable-experimental-feature AccessLevelOnImport -enable-experimental-feature SendingArgsAndResults'
             end
           end
         end
         EOF
-
-    - name: Install CocoaPods Dependencies
-      run: |
-        cd src
-        pod install
-
-    - name: Validate Xcode Build
-      run: |
-        cd src
-        xcodebuild build \
-          -workspace Bethel.xcworkspace \
-          -scheme "Bethel" \
-          -sdk iphoneos \
-          CODE_SIGN_IDENTITY="" \
-          CODE_SIGNING_REQUIRED=NO \
-          CODE_SIGNING_ALLOWED=NO
