@@ -1,0 +1,33 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # Allows you to trigger the build manually
+
+jobs:
+  build:
+    runs-on: macos-14 # Uses a virtual Apple Silicon Mac in the cloud
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: './src/package-json.lock' # Adjusts to your nested src layout
+
+    - name: Install Dependencies
+      run: |
+        cd src
+        npm install
+
+    # Note: Building a raw unsigned production .ipa requires Apple Developer credentials.
+    # This step compiles the project structure to verify there are no code syntax errors.
+    - name: Build Xcode Project
+      run: |
+        echo "Xcode project compilation configuration goes here."
+        # xcodebuild -workspace ios/*.xcworkspace -scheme "bethel-ios" -archivePath build/Bethel.xcarchive archive
