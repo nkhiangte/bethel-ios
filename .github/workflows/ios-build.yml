@@ -23,6 +23,7 @@ jobs:
 
         target 'Bethel' do
           pod 'FirebaseCore'
+          pod 'FirebaseMessaging'
           pod 'GoogleDataTransport'
         end
         EOF
